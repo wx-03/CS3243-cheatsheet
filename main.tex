@@ -1,0 +1,54 @@
+\documentclass[landscape,a4paper]{extarticle}
+\usepackage{caption}
+\usepackage{multicol}
+\usepackage[top=1em,bottom=1em,left=1em,right=1em]{geometry}
+\usepackage[framemethod=tikz]{mdframed}
+\usepackage{microtype}
+\usepackage{pdfpages}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{anyfontsize}
+\usepackage[shortlabels]{enumitem}
+\usepackage{graphicx, float}
+\usepackage{ulem} % Using \uline{} instead of \underline{} will make the line closer to the word
+\usepackage{xcolor}
+\usepackage{tgschola}
+
+\let\bar\overline
+
+% Remove vertical space before and after all verbatim environments
+\BeforeBeginEnvironment{verbatim}{\vspace{-\topsep}\vspace{-\partopsep}}
+\AfterEndEnvironment{verbatim}{\vspace{-\topsep}\vspace{-\partopsep}}
+
+% Configure image directory
+\graphicspath{{images/}}
+
+\newenvironment{Figure}
+  {\par\noindent\minipage{\linewidth}}
+  {\endminipage\par\medskip}
+  
+% Remove caption labels
+\captionsetup{labelformat=empty,labelsep=none}
+
+% No paragraph indent
+\setlength{\parindent}{0pt}
+
+% No spaces between list items, no left margins
+\setlist[enumerate]{nosep, leftmargin=*}
+\setlist[itemize]{nosep, leftmargin=*}
+
+% No spaces before and after math mode
+\expandafter\def\expandafter\normalsize\expandafter{%
+    \normalsize%
+    \setlength\abovedisplayskip{0pt}%
+    \setlength\belowdisplayskip{0pt}%
+    \setlength\abovedisplayshortskip{-8pt}%
+    \setlength\belowdisplayshortskip{2pt}%
+}
+
+\begin{document}
+\fontsize{7}{8}\selectfont
+\fontfamily{qcs}\selectfont
+\begin{multicols*}{5}
+    Hello
+\end{multicols*}
+\end{document}
