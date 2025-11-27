@@ -11,13 +11,16 @@
 \usepackage{graphicx, float}
 \usepackage{ulem} % Using \uline{} instead of \underline{} will make the line closer to the word
 \usepackage{xcolor}
-\usepackage{tgschola}
-
-\let\bar\overline
+\usepackage[T1]{fontenc}
+\usepackage{mathptmx}
+% \usepackage{lmodern}
+\usepackage[scaled=0.85]{FiraMono}
 
 % Remove vertical space before and after all verbatim environments
 \BeforeBeginEnvironment{verbatim}{\vspace{-\topsep}\vspace{-\partopsep}}
 \AfterEndEnvironment{verbatim}{\vspace{-\topsep}\vspace{-\partopsep}}
+
+\renewcommand{\familydefault}{\sfdefault}
 
 % Configure image directory
 \graphicspath{{images/}}
@@ -45,10 +48,202 @@
     \setlength\belowdisplayshortskip{2pt}%
 }
 
+% \setlength{\columnsep}{2pt}
+
 \begin{document}
-\fontsize{7}{8}\selectfont
-\fontfamily{qcs}\selectfont
+\fontsize{6}{7}\selectfont
+% \fontfamily{qcs}\selectfont
 \begin{multicols*}{5}
-    Hello
+    \textbf{\uline{CSPs}}
+
+    \textbf{CSP Formulation}
+
+    \begin{itemize}
+        \item State representation
+        \begin{itemize}
+            \item Variables: \verb|X = {x_1, ... , x_n}|
+            \item Domains: \verb|D = {d_1, ... , d_k}|
+            \begin{itemize}
+                \item Such that \verb|x_i| has domain \verb|d_i|
+            \end{itemize}
+            \item Initial state: all variables unassigned
+            \item Intermediate state: partial assignment
+        \end{itemize}
+        \item Actions, costs, and transition
+        \begin{itemize}
+            \item Assignment of values (within domain) to variables
+            \item Costs are unnecessary
+        \end{itemize}
+        \item Goal test
+        \begin{itemize}
+            \item Constraints: \verb|C = {c_1, ... , c_m}|
+            \begin{itemize}
+                \item Defined via a constraint langauge (algebra, logic, sets)
+                \item Each \verb|c_i| corresponds to a requirement on some subset of \verb|X|
+                \item Can be unary (\textbar scope\textbar = 1), binary (\textbar scope\textbar = 2), or global (\textbar scope\textbar $>$ 2)
+            \end{itemize}
+            \item Objective is a complete and consistent assignment
+            \begin{itemize}
+                \item Find a legal assignment $(y_i, ..., y_n)$ s.t.
+                $y_i \in D_i\ \forall i \in [1, n)$
+                \item Complete: all variables assigned values
+                \item Consistent: all constraints in \verb|C| satisfied
+            \end{itemize}
+        \end{itemize}
+    \end{itemize}
+
+    \textbf{Algo}
+
+    \begin{Figure}
+        \centering
+        \includegraphics[width=\linewidth]{csp_algo.png}        
+    \end{Figure}
+
+    \textbf{Search tree size}
+
+    At depth $l$: $(|X| - l) \cdot |d|$ states
+
+    Total number of leaf states: 
+
+    \[
+        nm \times (n - 1) m \times (n - 2) m \times \ldots \times 2m \times m = n ! m^n
+    \]
+
+    where $n = |x|$ and $m = |d|$
+
+    Order of variable assignments is not important, just consider assignments to one variable per level ($m ^ n$ leaves)
+
+    \begin{Figure}
+        \centering
+        \includegraphics[width=0.7\linewidth]{csp_search_tree_size.jpg}
+    \end{Figure}
+
+    \textbf{Backtracking algorithm}
+
+    \begin{verbatim}
+def backtrack(csp, assgt) -> bool:
+    if assgt is complete:
+        return assgt
+    var = select_unassigned_variable(csp, assgt)
+    for val in order_dom_values(csp, var, assgt):
+        if val is consistent with assgt:
+            add {var = val} to assgt
+            inferences = inference(csp, var, assgt)
+            if inferences != failure:
+                add inferences to csp
+                result = backtrack(csp, assgt)
+                if result != failure:
+                    return result
+                remove inferences from csp
+            remove {var = value} from assgt
+    return failure
+    \end{verbatim}
+
+    \textbf{Variable-order heuristics}
+
+    \textbf{MRV (minimum remaining values)}
+    
+    \begin{itemize}
+        \item Choose variable with fewest legal values
+        \item Most constrained variable
+        \item Sort by domain size, choose variable with smallest domain size
+        \item Places larger subtrees closer to the root so that any invalid state found prunes a larger
+        subtree $\Rightarrow$ eliminates larger subtrees earlier
+    \end{itemize}
+
+    \textbf{Degree Heuristic}
+
+    \begin{itemize}
+        \item To break ties in MRV heuristics
+        \item Pick unassigned variable with most constraints (highest degree in constraint graph)
+        \item This reduces the branching factor $b$
+    \end{itemize}
+
+    Recommended variable selection: MRV, then degree, then random
+
+    \textbf{Value-order Heuristics}
+
+    \textbf{LCV (least constraining value)}
+
+    \begin{itemize}
+        \item Choose the value that rules out the fewest choices from remaining domain values
+        \begin{itemize}
+            \item Given assignment of value \verb|v| to variable \verb|x'|, determine set of unassigned
+            variables \verb|U| that share a constraint with \verb|x'| and pick \verb|v| that maximises sum of consistent
+            domain sizes of variables in \verb|U|
+        \end{itemize}
+        \item Avoids failure by avoiding empty domains
+    \end{itemize}
+
+    With variables, fail first. With values, fail last. Cuz need to look at all variables
+    but dn to look at all values.
+
+    BUT if all solutions required, then value-ordering irrelevant
+
+    \textbf{Forward Checking}
+
+    Track remaining legal values for unassigned variables, terminate search when any variable has no legal values
+    (based on constraints with recently assigned variable)
+
+    \textbf{Constraint propagation}
+
+    Inference step to ensure local consistency of all variables
+    \begin{itemize}
+        \item Traverse constraint graph to ensure variable at each node is consistent, eliminate all values in variable's
+        domain that are not consistent with linked constraints
+    \end{itemize}
+
+    \textbf{Node-consistent (vertex-consistent)}
+    \begin{itemize}
+        \item Domain of a variable is consistent with its unary constraints
+        \item Achieved through pre-processing step before backtracking
+    \end{itemize}
+
+    \textbf{Arc-consistent (edge-consistent)}
+    \begin{itemize}
+        \item Domain of a variable is consistent with its binary constraints
+        \item The variable's domain value must have a partnering domain value in other variable that will
+        satisfy the binary constraint
+    \end{itemize}
+
+    $X_i$ is arc-consistent w.r.t $X_j$ $\iff$ $\forall x \in D_i\ \exists y \in D_j$ s.t. binary
+    constraint on arc $(X_i, X_j)$ is satisfied
+
+    When checking arc $(X_a, X_b)$, remove values from $D_a$
+
+    \textbf{AC-3 Algo}
+
+    \begin{verbatim}
+function ac3(csp) -> bool:
+    queue = queue of all arcs in csp (both dirs)
+    while queue:
+        (X_i, X_j) = queue.pop()
+        if revise(csp, X_i, X_j):
+            if len(D_i) == 0: 
+                return False
+            for X_k in X_i.neighbors - {X_j}:
+                queue.append((X_k, X_i))
+    return True
+
+function revise(csp, X_i, X_j):
+    revised = False
+    for x in D_i:
+        if no value in D_j allows (x, y) to satisfy 
+        the constraint between X_i and X_j:
+            delete x from D_i
+            revised = true
+    return revised
+    \end{verbatim}
+
+    \textbf{Time complexity of AC-3}
+
+    With $n$ variables, there are at most $2 \times {n \choose 2} \in O(n^2)$ directed arcs
+
+    Each arc can be reinserted at most $d$ times because $X_i$ has hat most $d$ values to delete
+    where $d$ is domain size
+
+    Checking consistency of arc (\verb|revise()|) takes $O(d^2)$ time
+
+    Overall time complexity: $O(n^2 \times d \times d^2)$ = $O(n^2 \times d^3)$
 \end{multicols*}
 \end{document}
