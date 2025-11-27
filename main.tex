@@ -245,5 +245,66 @@ function revise(csp, X_i, X_j):
     Checking consistency of arc (\verb|revise()|) takes $O(d^2)$ time
 
     Overall time complexity: $O(n^2 \times d \times d^2)$ = $O(n^2 \times d^3)$
+
+    \textbf{\uline{Advesarial search}}
+
+    Assume 2 players, zero-sum game. MAX player wants to maximise value (our agent),
+    MIN player wants to minimise value (opponent)
+
+    \textbf{Formulating games}
+
+    \begin{itemize}
+        \item State representation: as per general search formulation
+        \item \verb|TO-MOVE(s)|: returns \verb|p|, the player to move in state \verb|s|
+        \item \verb|ACTIONS(s)|: legal moves in state \verb|s|
+        \item \verb|RESULT(s, a)|: the transition model, returns resultant immediate state
+        when taking action \verb|a| at state \verb|s|
+        \item \verb|IS-TERMINAL(s)|: returns \verb|True| when game is over, \verb|False| otherwise
+        \item \verb|UTILITY(s, p)|: defines a numeric value (score) for player \verb|p| when the
+        game ends at terminal state \verb|s|
+    \end{itemize}
+
+    For zero-sum games, at terminal state \verb|s|,
+
+    \verb|utility(MAX, s) + utility(MIN, s) = 0|. 
+
+    Just use \verb|utility(MAX) = -utility(MIN)|
+
+    \textbf{Strategies: optimal decisions via minimax}
+
+    \begin{Figure}
+        \centering
+        \includegraphics[width=\linewidth]{minimax.png}        
+    \end{Figure}
+
+    \begin{Figure}
+        \centering
+        \includegraphics[width=\linewidth]{nim.png}        
+    \end{Figure}
+
+    Backwards induction used
+
+    \textbf{Properties}
+    \begin{itemize}
+        \item Complete assuming finite game tree
+        \item Optimal assuming optimal gameplay (opponent plays optimally)
+        \item Time complexity $O(b^m)$
+        \item Space complexity $O(bm)$
+        \item Time polynomial to tree size
+    \end{itemize}
+
+    \textbf{Backwards Induction Issue}
+
+    Game trees are massive, impossible to expand entire tree, must find ways to shrink search tree 
+
+    \textbf{$\alpha$ - $\beta$ pruning}
+    
+    General idea: don't explore moves that would never be considered.
+    
+    $\alpha$ bounds MAX's values,
+    $\beta$ bounds MIN's values.
+
+    Prune subtrees that will never affect Minimax decision
+
 \end{multicols*}
 \end{document}
