@@ -13,6 +13,7 @@
 \usepackage{xcolor}
 \usepackage[T1]{fontenc}
 \usepackage{mathptmx}
+\usepackage{mathrsfs}
 % \usepackage{lmodern}
 \usepackage[scaled=0.85]{FiraMono}
 
@@ -48,10 +49,11 @@
     \setlength\belowdisplayshortskip{2pt}%
 }
 
-% \setlength{\columnsep}{2pt}
+\setlength{\columnsep}{2pt}
+\newcommand{\entails}{\models}
 
 \begin{document}
-\fontsize{6}{7}\selectfont
+\fontsize{6}{6}\selectfont
 % \fontfamily{qcs}\selectfont
 \begin{multicols*}{5}
     \textbf{\uline{CSPs}}
@@ -305,6 +307,192 @@ function revise(csp, X_i, X_j):
     $\beta$ bounds MIN's values.
 
     Prune subtrees that will never affect Minimax decision
+
+    \begin{Figure}
+        \centering
+        \includegraphics[width=\linewidth]{alpha_beta_example.png}
+    \end{Figure}
+
+    $S_3$ will be -7 or lower. MAX will not choose it because it already has $S_1$ or $S_2$
+    which are higher than -7.
+
+    \textbf{Minimax algo (a and b are alpha and beta)}
+
+    \begin{verbatim}
+def minimax(node, depth, isMax, a, b):
+  if node is a leaf node:
+    return value of node
+  if isMax:
+    bestVal = -INFINITY
+    for each child node:
+      value = minimax(node, depth+1, false, a, b)
+      bestVal = max(bestVal, value)
+      a = max(a, bestVal)
+      if b <= a:
+        break
+    return bestVal
+  else:
+    bestVal = +INFINITY
+    for each child node:
+      value = minimax(node, depth+1, true, a, b)
+      bestVal = min(bestVal, value)
+      beta = min(beta, bestVal)
+      if b <= a:
+        break
+    return bestVal
+minimax(0, 0, true, -INFINITY, +INFINITY)
+    \end{verbatim}
+
+    Perfect ordering with alpha beta gives time complexity $O(b^{m/2})$
+    Random ordering gives time complexity $O(b^{3m/4})$
+
+    \textbf{$\alpha$ - $\beta$ pruning issues:}
+
+    \begin{itemize}
+        \item Issue: Depth of the tree could be very large
+        \begin{itemize}
+            \item Backwards induction only works with terminal states
+            \item If depth is very deep, it takes very long before we can reach terminal state
+        \end{itemize}
+        \item Solution: Heuristic minimax
+        \begin{itemize}
+            \item Cutoff test: have a depth limit as to how deep we search for a terminal node
+            \item Evaluation function: Estimates the expected utility at that state
+            \item Run MINIMAX until depth $d$ then start using evaluation function to choose nodes
+            \item Replaces \verb|is_terminal(s)| with \verb|cutoff_test(s, d)|.
+            \item Replaces \verb|utility(s, p)| with \verb|eval(s, p)|.
+        \end{itemize}
+    \end{itemize}
+
+    \textbf{\uline{Logical agents}}
+
+    \textbf{Knowledge-based agents}
+
+    \begin{itemize}
+        \item Represent agent domain knowledge using logical formulas
+        \item Main components of a logical agent are inference engine and knowledge base. Inference
+        engine consists of domain-independent algorithms while knowedge base is domain-specific content
+    \end{itemize}
+
+    \textbf{KB agent function}
+
+    \begin{verbatim}
+def KB_agent(percept) -> action:
+    persistent: KB, t (time)
+
+    TELL(KB, MAKE_PERCEPT_SENTENCE(percept, t))
+    action = ASK(KB, MAKE_ACTION_QUERY(t))
+    TELL(KB, MAKE_ACTION_SENTENCE(action, t))
+    t++
+    return action
+    \end{verbatim}
+
+    \textbf{Inference via entailment}
+
+    \textbf{Entailment}
+
+    \textbf{Modelling:} $v$ models $\alpha$ (a sentence) if $\alpha$ is true under $v$
+
+    \begin{itemize}
+        \item $v$ corresponds to one set of value assignments
+        \item $v$ corresponds to one instance of the environment (known part of a state)
+        \item Let $M(\alpha)$ be the set of all models for $\alpha$
+    \end{itemize}
+
+    \textbf{Entailment ($\entails$): } One thing (right) follows from the other (left)
+    \begin{itemize}
+        \item $\alpha \entails \beta \iff M(\alpha) \subseteq M(\beta)$
+        \item E.g. $\alpha$ = $q$ is prime, $\beta$ = ($q \text{ is odd)} \vee q = 2$
+    \end{itemize}
+
+    \textbf{Inference}
+
+    Inference is deriving new knowledge from the KB
+
+    KB: environment rules/laws and percepts
+
+    \vspace{0.5em}
+
+    \begin{align*}
+        KB \entails \alpha &\implies M(KB) \subseteq M(\alpha)\\
+        M(KB) \cup M(\alpha) &\equiv M(\alpha)\\
+        M(KB) \cap M(\alpha) &\equiv M(KB)\\
+        M(KB) \cap M(\neg \alpha) &\equiv \emptyset
+    \end{align*}
+
+    Given KB, try to infer $\alpha$, i.e. determine if $KB \entails \alpha$.
+
+    If $KB \entails \alpha$, then $\alpha$ can be added to KB since $M(KB) \cap M(\alpha) \equiv M(KB)$
+
+    \textbf{Soundness \& Completeness}
+
+    \begin{itemize}
+        \item $KB \vdash_A \alpha$
+        \begin{itemize}
+            \item Means ``sentence $\alpha$ is derived from KB by inference algorithm A''
+        \end{itemize}
+        \item Soundness
+        \begin{itemize}
+            \item A is sound if $KB \vdash_A \alpha \implies KB \entails \alpha$
+            \item A will not infer nonsense.
+        \end{itemize}
+        \item Completeness
+        \begin{itemize}
+            \item A is complete if $KB \entails \alpha \implies KB \vdash_A \alpha$
+            \item A can infer any sentence that KB entails
+        \end{itemize} 
+    \end{itemize}
+
+    \textbf{Truth table enumeration}
+
+    Draw truth table of KB and $\alpha$, KB entails $\alpha$ if whenever KB true, $\alpha$ true
+
+    \begin{Figure}
+        \centering
+        \includegraphics[width=\linewidth]{tt_enumeration.png}
+    \end{Figure}
+
+    \textbf{Properties}
+
+    \begin{itemize}
+        \item $O(2^n)$ time complexity
+        \item $O(n)$ space complexity
+    \end{itemize}
+
+    \textbf{Theorem proving methods}
+
+    \textbf{Validity \& Satisfiability}
+    
+    \begin{itemize}
+        \item Validity
+        \begin{itemize}
+            \item A sentence $\alpha$ is \textbf{valid} if it is true for all possible truth value assignments
+            \item \textbf{tautology}
+            \item $(KB \entails \alpha) \iff (KB \implies \alpha)$ (deduction theorem)
+        \end{itemize}
+        \item Satisfiability
+        \begin{itemize}
+            \item A sentence is \textbf{satisfiable} if it is true for some truth value assignment (i.e. a model exists for that sentence)
+            \item A sentence is \textbf{unsatisfiable} if it is true for no truth value assignments
+            \begin{itemize}
+                \item \textbf{contradictions}
+            \end{itemize}
+            \item $(KB \entails \alpha) \iff (KB \wedge \neg \alpha)$ is unsatisfiable
+            \begin{itemize}
+                \item Definition of proof by contradiction
+            \end{itemize}
+        \end{itemize}
+    \end{itemize}
+
+    \textbf{Inference rules}
+
+    \begin{itemize}
+        \item And-Elimination: $a \wedge b \entails a,\ a \wedge b \entails b$
+        \item Modus Ponens: $a \wedge (a \implies b) \entails b$
+        \item Logical equivalences: $(a \vee b) \entails \neg(\neg a \wedge \neg b)$
+    \end{itemize}
+
+
 
 \end{multicols*}
 \end{document}
