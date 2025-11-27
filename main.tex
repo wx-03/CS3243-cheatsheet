@@ -492,6 +492,24 @@ def KB_agent(percept) -> action:
         \item Logical equivalences: $(a \vee b) \entails \neg(\neg a \wedge \neg b)$
     \end{itemize}
 
+    \textbf{CNF}
+
+    CNF = conjunction of disjunctive sentences, e.g. $(x_1 \vee x_2) \wedge (x_2 \vee x_3 \vee x_4)$
+
+    \textbf{Conversion to CNF}
+    \begin{itemize}
+        \item Convert:
+        \begin{itemize}
+            \item $\alpha \iff \beta$ to $(\alpha \implies \beta) \wedge (\beta \implies \alpha)$
+        \end{itemize}
+    \end{itemize}
+
+    \textbf{Resolution}
+
+    If a literal $x$ appears in $R_i$ and its negation $\neg x$ appears in $R_j$, 
+    where $R_i, R_j \in KB$, then it can be removed from both. Then the remaining literals
+    combine to 1 clause
+
 
 
 \end{multicols*}
