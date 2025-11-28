@@ -53,7 +53,7 @@
 \newcommand{\entails}{\models}
 
 \begin{document}
-\fontsize{6}{6}\selectfont
+\fontsize{5}{5}\selectfont
 % \fontfamily{qcs}\selectfont
 \begin{multicols*}{5}
     \textbf{\uline{CSPs}}
@@ -213,6 +213,10 @@ def backtrack(csp, assgt) -> bool:
 
     When checking arc $(X_a, X_b)$, remove values from $D_a$
 
+    \begin{itemize}
+        \item Done during pre-processing or after each variable assignment (expensive)
+    \end{itemize}
+
     \textbf{AC-3 Algo}
 
     \begin{verbatim}
@@ -252,6 +256,11 @@ function revise(csp, X_i, X_j):
 
     Assume 2 players, zero-sum game. MAX player wants to maximise value (our agent),
     MIN player wants to minimise value (opponent)
+
+    \begin{itemize}
+        \item If MIN does not play optimally, the actual outcome for MAX can only be better and never worse, but the algo may
+        not select the optimal move.
+    \end{itemize}
 
     \textbf{Formulating games}
 
@@ -457,6 +466,7 @@ def KB_agent(percept) -> action:
     \begin{itemize}
         \item $O(2^n)$ time complexity
         \item $O(n)$ space complexity
+        \item Sound and complete
     \end{itemize}
 
     \textbf{Theorem proving methods}
@@ -489,7 +499,9 @@ def KB_agent(percept) -> action:
     \begin{itemize}
         \item And-Elimination: $a \wedge b \entails a,\ a \wedge b \entails b$
         \item Modus Ponens: $a \wedge (a \implies b) \entails b$
-        \item Logical equivalences: $(a \vee b) \entails \neg(\neg a \wedge \neg b)$
+        \item Logical equivalences / Modus Tollens: $(a \vee b) \entails \neg(\neg a \wedge \neg b)$
+        \item Contrapositive: $(a \implies b) \entails (\neg b \implies \neg a)$
+        \item Syllogism: $(a \implies b) \wedge (b \implies c) \entails (a \implies c)$
     \end{itemize}
 
     \textbf{CNF}
@@ -501,6 +513,47 @@ def KB_agent(percept) -> action:
         \item Convert:
         \begin{itemize}
             \item $\alpha \iff \beta$ to $(\alpha \implies \beta) \wedge (\beta \implies \alpha)$
+            \item $\alpha \implies \beta$ to $\neg \alpha \vee \beta$
+        \end{itemize}
+        \item Expand $\neg$ using De Morgan's and double negation
+        \item Distributive law to convert $(\alpha \vee (\beta \wedge \gamma))$ to $(\alpha \vee \beta) \wedge (\alpha \vee \gamma)$
+    \end{itemize}
+
+    \textbf{Cardinality Rules}
+
+    Suppose $n$ variables, and we want $k$ to be true.
+
+    \begin{itemize}
+        \item At least $k$
+        \begin{itemize}
+            \item DNF: Connect each possible $k$-way conjunction via disjunctions
+            \begin{itemize}
+                \item E.g. $n = 3, k = 2: (A \wedge B) \vee (A \wedge C) \vee (B \wedge C)$
+            \end{itemize}
+            \item CNF: Connect each possible $i$-way disjunction via conjunctions, where $i = n - k + 1$
+            \begin{itemize}
+                \item E.g. $n = 3, k = 2, i = n - k + 1 = 2$, so we use pairwise OR: $(A \vee B) \wedge (A \vee C) \wedge (B \vee C)$
+            \end{itemize}
+        \end{itemize}
+        \item At most $k$
+        \begin{itemize}
+            \item CNF: Negation of $k + 1$ ways
+            \begin{itemize}
+                \item E.g. $n = 3, k = 1$: 1 + 1 (pairwise) negations of all literals: $(\neg A \vee \neg B) \wedge (\neg A \vee \neg C) \wedge (\neg B \vee \neg C)$
+            \end{itemize}
+        \end{itemize}
+        \item Exactly $k$
+        \begin{itemize}
+            \item DNF: Choose all combinations of the $n$ variables where $k$ literals are true and $n - k$ are False
+            \begin{itemize}
+                \item E.g. $n = 3, k = 2:\\
+                (A \wedge B \wedge \neg C) \vee (A \wedge \neg B \wedge C) \vee (\neg A \wedge B \wedge C)$
+            \end{itemize}
+            \item CNF: Conjunction of at least $k$ and at most $k$
+            \begin{itemize}
+                \item E.g. $n = 3, k = 2:\\
+                (A \vee B) \wedge (A \vee C) \wedge (B \vee C) \wedge (\neg A \vee \neg B \vee \neg C)$
+            \end{itemize}
         \end{itemize}
     \end{itemize}
 
@@ -510,7 +563,94 @@ def KB_agent(percept) -> action:
     where $R_i, R_j \in KB$, then it can be removed from both. Then the remaining literals
     combine to 1 clause
 
+    \textbf{Resolution algo}
 
+%     \begin{verbatim}
+% def PL_RESOLUTION(KB, a: query) -> boolean:
+%     clauses = (clauses of KB in CNF) and (not a)
+%     new = {}
+%     while True:
+%         for each pair of c_i and c_j in clauses:
+%             resolvents = PL_RESOLVE(c_i, c_j)
+%             if resolvents contains empty clause:
+%                 return True
+%             new = new + resolvents
+%     \end{verbatim}
+
+    \begin{Figure}
+        \centering
+        \includegraphics[width=\linewidth]{resolution_algo.png}
+    \end{Figure}
+
+    \begin{itemize}
+        \item Make a clause list (copy of KB specified in CNF including negation of query $\neg \alpha$)
+        \item Repeatedly resolve two clauses from clause list (add resolvent to clause list)
+        \item Keep doing this till empty clause found or no more resolutions possible
+        \begin{itemize}
+            \item If empty clause then can infer $\alpha$
+            \item If no more resolutions and not empty clause then cannot infer $\alpha$
+        \end{itemize}
+    \end{itemize}
+
+    \textbf{\uline{Uncertainties}}
+
+    \textbf{Conditional probabilities and Bayes RUle}
+
+    $Pr[A | B] = \frac{P[A \wedge B]}{P[B]}$
+
+    Bayes rule: $Pr[A | B] = \frac{Pr[B | A] Pr[A]}{Pr[B]}$
+
+    \textbf{Chain rule}
+
+    \begin{align*}
+        Pr[R_1 \wedge \ldots \wedge R_k] &= Pr[(R_1 \wedge \ldots \wedge R_{k-1}) \wedge R_k]\\
+        &= Pr[R_k | R_{k - 1} \wedge \ldots \wedge R_1] \cdot Pr[R_{k-1} \wedge \ldots \wedge R_1]
+    \end{align*}
+
+    \begin{align*}
+        Pr\left[R_1 \wedge R_2 \wedge \ldots \wedge R_k\right] = \prod_{j = 1, \ldots , k} Pr\left[R_j | R_1 \wedge \ldots \wedge R_{j - 1}\right]
+    \end{align*}
+
+    \begin{align*}
+        Pr\left[A \wedge B \wedge C \wedge D\right] &= Pr\left[D | C \wedge B \wedge A\right] \cdot Pr \left[C \wedge B \wedge A\right]\\
+        &= Pr \left[D | C \wedge B \wedge A\right] \cdot Pr \left[C | B \wedge A\right] \cdot Pr \left[B \wedge A\right]\\
+        &= Pr \left[D | C \wedge B \wedge A\right] \cdot Pr \left[C | B \wedge A\right] \cdot Pr \left[B | A\right] \cdot Pr \left[A\right]
+    \end{align*}
+
+    \begin{align*}
+        A \text{ and } B \text{ are independent } &\iff Pr \left[A \wedge B\right] = Pr \left[A\right] \cdot Pr \left[B\right]\\
+        &\iff Pr \left[A | B\right] = Pr[A]
+    \end{align*}
+
+    \textbf{Inference via Bayes' Rule}
+
+    Infer statement of the form ``What is the likelihood of an event $\alpha$ given the probabilities of other events''
+
+    \begin{align*}
+        Pr \left[A \wedge B | C\right] &= \frac{Pr\left[A \wedge B \wedge C\right]}{P[C]} = \frac{Pr \left[A \wedge B \wedge C\right]}{Pr \left[B \wedge C\right]} \times \frac{Pr \left[B \wedge C\right]}{Pr \left[C\right]}\\
+        &= Pr \left[A | B \wedge C\right] \times Pr \left[B | C\right]
+    \end{align*}
+
+    \textbf{Bayesian Networks}
+
+    \begin{itemize}
+        \item Vertices are random variables
+        \item An edge from $X$ to $Y$ means $X$ directly influences $Y$
+        \item Each vertex has a conditional distribution given its parents
+        \item In the simplest case, a conditional distribution can be represented as a conditional probability table (CPT)
+        \item CPTs in the BN are the distribution over $Z$ for each combination of parent values
+    \end{itemize}
+
+    \textbf{Markov Blanket}
+
+    \begin{itemize}
+        \item A variable is conditionally independent of all other nodes in the network, given
+        \begin{itemize}
+            \item its parents
+            \item its children
+            \item its children's parents
+        \end{itemize}
+    \end{itemize}
 
 \end{multicols*}
 \end{document}
