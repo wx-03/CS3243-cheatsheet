@@ -53,6 +53,7 @@
 \newcommand{\entails}{\models}
 
 \begin{document}
+\includepdf[angle=270, scale=0.98]{midterm_cheatsheet.pdf}
 \fontsize{5}{5}\selectfont
 % \fontfamily{qcs}\selectfont
 \begin{multicols*}{5}
@@ -345,7 +346,7 @@ def minimax(node, depth, isMax, a, b):
     for each child node:
       value = minimax(node, depth+1, true, a, b)
       bestVal = min(bestVal, value)
-      beta = min(beta, bestVal)
+      b = min(b, bestVal)
       if b <= a:
         break
     return bestVal
